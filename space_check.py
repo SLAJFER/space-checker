@@ -26,7 +26,7 @@ def dev_info(path_input):
     if user_input[0] != "/":
         user_input = str("/" + user_input)
 
-    if len(user_input) > 0 and user_input[-1] == "/":
+    if len(user_input) > 1 and user_input[-1] == "/":
         user_input = str(user_input[:-1])
 
     # Gets the name and filepath for the block device (/dev/sda1, /dev/sdc3, etc) that the block device is mounted to, aswell as the file system type
@@ -137,3 +137,4 @@ def dev_info(path_input):
 path = user_input()
 if path:
     dev_info(path)
+
