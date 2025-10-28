@@ -22,14 +22,18 @@ def user_input():
 
 def dev_info(path_input):
     user_input = str(path_input)
+
     if user_input[0] != "/":
         user_input = str("/" + user_input)
+
+    if len(user_input) > 0 and user_input[-1] == "/":
+        user_input = str(user_input[:-1])
 
     # Gets the name and filepath for the block device (/dev/sda1, /dev/sdc3, etc) that the block device is mounted to, aswell as the file system type
     try:
         mount = subprocess.run([f"mount -l | grep \"{user_input} type \""], shell=True, capture_output=True, text=True)
         mount_result = str(mount.stdout).strip()
-        mount_search = re.search("((?:^\/)?\S+)\son\s\/\S*\stype\s(\S+)", mount_result)
+        mount_search = re.search(r"((?:^\/)?\S+)\son\s\/\S*\stype\s(\S+)", mount_result)
         dev_name = str(mount_search.group(1))
         fs_type = str(mount_search.group(2))
 
@@ -39,13 +43,12 @@ def dev_info(path_input):
         exit()
 
     # Grabs and stores ALL specified fields of information that regards the designated block device
-    dev_data = subprocess.run([f"sudo dumpe2fs -h {dev_name} | grep 'Block size\|Fragment size\|Inode count\|Free inodes\|Lifetime writes\|Block count\|Reserved block count\|Free blocks\|Blocks per group\|Inodes per group\|Inode size'"], shell=True, capture_output=True, text=True)
+    dev_data = subprocess.run([fr"sudo dumpe2fs -h {dev_name} | grep 'Block size\|Fragment size\|Inode count\|Free inodes\|Lifetime writes\|Block count\|Reserved block count\|Free blocks\|Blocks per group\|Inodes per group\|Inode size'"], shell=True, capture_output=True, text=True)
     dev_data_result = str(dev_data.stdout.strip())
     dev_data_result = dev_data_result.replace("\n", "")
-    dev_data_search = re.search("\D+(\d+)\D+(\d+)\D+(\d+)\D+(\d+)\D+(\d+)\D+(\d+)\D+(\d+)\D+(\d+)\D+(\d+)\D+(\d+\s+\w\w)\D+(\d+)", dev_data_result)
+    dev_data_search = re.search(r"\D+(\d+)\D+(\d+)\D+(\d+)\D+(\d+)\D+(\d+)\D+(\d+)\D+(\d+)\D+(\d+)\D+(\d+)\D+(\d+\s+\w\w)\D+(\d+)", dev_data_result)
     
     # This if-condition is needed because some technically valid mount points can't be opened and read, such as '/boot/efi'
-    # Reading such mount points returns the error "dumpe2fs: Bad magic number in super-block while trying to open /dev/sda1"
     # This condition therefore checks if the 'dev_data_search' variable is empty or not, and exits the program if it is empty
     if dev_data_search is None:
         print("Invalid mount point entered, please try again")
